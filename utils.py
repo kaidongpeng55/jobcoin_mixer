@@ -15,3 +15,9 @@ def send_coin(url, fromaddr, toaddr, amount):
         }
     )
 
+def success(a):
+    print('success')
+
+def fail(a):
+    print('fail')
+

@@ -1,25 +1,15 @@
-from time import time
 import json
-import hashlib
-from hashlib import sha256
-from uuid import uuid4
-
-from flask import Flask, jsonify, request
-from urllib.parse import urlparse
 import requests
+import threading
 
 import parser
+from flask import Flask, jsonify, request
+from urllib.parse import urlparse
 from log import get_logger
 from random_address import get_unique_addr
 from distribute_fund import *
-
 from queue import Queue
-
-def success(a):
-    print('success')
-
-def fail(a):
-    print('fail')
+from utils import *
 
 # Global Definitions
 app = Flask(__name__)
@@ -49,11 +39,16 @@ def issue_deposit_addr():
 
     # now we has the data in hand
     deposit_addr = next(unique_addr)
+    distributer = Distributer(cfg['houseaccount'], cfg['maxfundwaittime'])
+    distributer.prepare(deposit_addr, addresses)
+    proc_queue.put(distributer)
     response = {
         'address': addresses,
         'deposit_address': deposit_addr,
         'expiry time': cfg['maxfundwaittime']
     }
+    # add to global queue
+    proc_queue.put(distributer)
     return jsonify(response), 200
 
 @app.route('/testget/', methods=['GET'])
@@ -75,8 +70,7 @@ def testget():
     deposit_addr = next(unique_addr)
     distributer = Distributer(cfg['houseaccount'], cfg['maxfundwaittime'])
     distributer.prepare(next(unique_addr), ['test1','test2'])
-    handle_mix_request(distributer).then(success, fail)
-
+    handle_mix_request(distributer).then(success, fail) 
     response = {
         'deposit_address': deposit_addr,
         'expiry time': cfg['maxfundwaittime']
@@ -84,13 +78,21 @@ def testget():
 
     return jsonify(response), 200
 
+def flaskThread(host, port):
+    print('in the flaskThread')
+    app.run(host = host, port = port, threaded = True)
+    
 
 if __name__ == "__main__":
+    # _thread.start_new_thread(flaskThread, ())
     # app.run(host='0.0.0.0', port=5000)
     cfg = parser.load_config()
     print('cfg:', cfg)
     logger = get_logger(cfg['appname'], verbose = cfg['verbose'])
     logger.info('test logger')
+
+    flask_thread = threading.Thread(target = flaskThread, args = (cfg['host'], cfg['port']))
+    flask_thread.start()
     
     # test
     for i in range(10):
@@ -98,7 +100,8 @@ if __name__ == "__main__":
         distributer.prepare(next(unique_addr), ['test1','test2'])
         handle_mix_request(distributer).then(success, fail)
     
-    app.run(host='0.0.0.0', port=5001)
+    print(66666666)
 
+    flask_thread.join()
 
 
