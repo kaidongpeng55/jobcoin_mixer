@@ -1,5 +1,7 @@
 import parser
 from log import get_logger
+from random_adress import get_unique_addr
+
 
 def main():
     cfg = parser.load_config()
