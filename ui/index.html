@@ -17,10 +17,28 @@
                         }).hide().appendTo('#container').slideDown('slow'); 
                     });
                     $("button").click(function(){
+                        $.find('[name=statusbar]')[0].innerHTML = ''
                         var len = $('.extraAddress').length;
-                        alert(len)
+                        url = window.location.href.slice(0, )
+                        if (url[url.length - 1] == '#') { url = url.slice(0,  -1) }
                         addrs = [...Array(len).keys()].map((idx) => $(`[name='address${idx}']`).val()).filter(e => e);                     
                         alert(`[${addrs}]`)
+                        $.ajax({
+                            type: 'POST',
+                            url: `${url}sendmoney/`,
+                            data: JSON.stringify({addresses: addrs}), // or JSON.stringify ({name: 'jonas'}),
+                            success: (result) => {
+                                console.log(JSON.stringify(result));
+                                $.find('[name=statusbar]')[0].innerHTML = ShowStatus(true, result )
+                            },
+                            error: (XMLHttpRequest, textStatus, errorThrown) => {
+                                alert(errorThrown);
+                                alert(textStatus)
+                                $.find('[name=statusbar]')[0].innerHTML = ShowStatus(false, XMLHttpRequest )
+                            },
+                            contentType: "application/json",
+                            dataType: 'json'
+                        });
                     });
                 })
                 function GetHtml()
@@ -31,8 +49,32 @@
                     $html.find('[name=addresslabel]')[0].innerHTML="Address " + (len + 1);
                     return $html.html();    
                 }
-                function RequestDepositAddr() {
+                function ShowStatus(success, result) {
+                    return `
+                        <div class="panel ${success? 'panel-success' : 'panel-danger'}">
+                            <div class="panel-heading">Request Status: ${success ? 'Success' : 'Error'}</div>
+                            <div class="panel-body">
 
+                            ${success ? `
+                                Your Jobcoins will be sent to the following addresses provided: </br>
+                                ${ result.addresses.map((addr) => `<li>${addr}</li>`).join('') }
+                                Your Deposit Address for this transaction is: <b>${result.deposit_address}</b> </br>
+                                Expiry Time: <b>${result.expiry_time}</b> seconds </br>
+                                </br>
+                                <h4><b>* Please send Jobcoin to the above deposit address before the expiry time *</b></h4>
+                                ` 
+                                : `
+                                    An Error occured to during the request. </br>
+                                    Type: ${result.status} ${result.statusText} </br>
+                                    Detail: ${result.responseText}
+
+                                `}
+
+
+                                
+                            </div>
+                        </div>
+                    `          
                 }
             </script>
     </head>    
@@ -51,6 +93,8 @@
             <div id="container"> </div>
             <a href="#" id="addRow"><i class="icon-plus-sign icon-white"></i> Add another JobCoin Address</p></a>   
             <button type="button" class="btn btn-info">Request Deposit Address</button>
+            </br></br>
+            <div name="statusbar"></div>
         </div>  
     </body>
 </html>

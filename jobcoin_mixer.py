@@ -1,9 +1,10 @@
 import json
 import requests
 import threading
+import os
 
 import parser
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from urllib.parse import urlparse
 from log import get_logger
 from random_address import get_unique_addr
@@ -12,23 +13,28 @@ from queue import Queue
 from utils import *
 
 # Global Definitions
-app = Flask(__name__)
+app = Flask(__name__, template_folder = os.path.abspath('./'))
 proc_queue = Queue()
 unique_addr = get_unique_addr()
 cfg = {}
 
+@app.route('/', methods=['GET'])
+def ui():
+    return render_template('ui/index.html')
+
 @app.route('/sendmoney/', methods=['POST'])
 def issue_deposit_addr():
-    print('inside post method')
     try:
         values = request.get_json()
         addresses = values.get('addresses')
     except:
+        print('no  addresses')
         return jsonify(no_data_response), 400
     try:
         assert isinstance(addresses, list)
         assert len(addresses) > 0
     except:
+        print('addresses is', addresses)
         return jsonify(bad_data_response), 400
 
     # now we has the data in hand
@@ -37,9 +43,9 @@ def issue_deposit_addr():
     distributer.prepare(deposit_addr, addresses)
     proc_queue.put(distributer)
     response = {
-        'address': addresses,
+        'addresses': addresses,
         'deposit_address': deposit_addr,
-        'expiry time': cfg['maxfundwaittime']
+        'expiry_time': cfg['maxfundwaittime']
     }
     # add to global queue
     proc_queue.put(distributer)
