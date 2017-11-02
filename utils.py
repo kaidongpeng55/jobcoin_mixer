@@ -21,3 +21,9 @@ def success(a):
 def fail(a):
     print('fail')
 
+no_data_response = {
+        'message': "Error: parameter 'addresses' not found or data not in json type"
+        }
+bad_data_response = {
+        'message': "Error: parameter 'addresses' should be a non-empty list of addresses"
+        }

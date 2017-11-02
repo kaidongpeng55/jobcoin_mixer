@@ -16,12 +16,6 @@ app = Flask(__name__)
 proc_queue = Queue()
 unique_addr = get_unique_addr()
 cfg = {}
-no_data_response = {
-        'message': "Error: parameter 'addresses' not found or data not in json type"
-        }
-bad_data_response = {
-        'message': "Error: parameter 'addresses' should be a non-empty list of addresses"
-        }
 
 @app.route('/sendmoney/', methods=['POST'])
 def issue_deposit_addr():
@@ -84,17 +78,17 @@ def flaskThread(host, port):
     
 
 if __name__ == "__main__":
-    # _thread.start_new_thread(flaskThread, ())
-    # app.run(host='0.0.0.0', port=5000)
+    # load global configs
     cfg = parser.load_config()
     print('cfg:', cfg)
     logger = get_logger(cfg['appname'], verbose = cfg['verbose'])
     logger.info('test logger')
 
+    # run flask thread on the background
     flask_thread = threading.Thread(target = flaskThread, args = (cfg['host'], cfg['port']))
     flask_thread.start()
     
-    # test
+    # test async promise
     for i in range(10):
         distributer = Distributer(cfg['houseaccount'], cfg['maxfundwaittime'])
         distributer.prepare(next(unique_addr), ['test1','test2'])
