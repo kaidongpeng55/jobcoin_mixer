@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script>
+                $(document).ready(function () {
+                    $('<div/>', {
+                        'class' : 'extraAddress', html: GetHtml()
+                    }).appendTo('#container');
+                    $('#addRow').click(function () {
+                        $('<div/>', {
+                            'class' : 'extraAddress', html: GetHtml()
+                        }).hide().appendTo('#container').slideDown('slow'); 
+                    });
+                    $("button").click(function(){
+                        var len = $('.extraAddress').length;
+                        alert(len)
+                        addrs = [...Array(len).keys()].map((idx) => $(`[name='address${idx}']`).val()).filter(e => e);                     
+                        alert(`[${addrs}]`)
+                    });
+                })
+                function GetHtml()
+                {
+                    var len = $('.extraAddress').length;
+                    var $html = $('.extraAddressTemplate').clone();
+                    $html.find('[name=address]')[0].name="address" + len;
+                    $html.find('[name=addresslabel]')[0].innerHTML="Address " + (len + 1);
+                    return $html.html();    
+                }
+                function RequestDepositAddr() {
+
+                }
+            </script>
+    </head>    
+    <body>
+        <div class="container">
+            <div class="page-header">
+                  <h2>Jobcoin Mixer</h2>   by Kaidong Peng
+            </div>
+
+            <div class="extraAddressTemplate" style="display:none" >
+                <label class="col-form-label" name="addresslabel" >Address</label>
+                <div class="controls controls-row">
+                    <input class="span3 form-control" placeholder="Address" type="text" name="address">
+                </div>
+            </div>
+            <div id="container"> </div>
+            <a href="#" id="addRow"><i class="icon-plus-sign icon-white"></i> Add another JobCoin Address</p></a>   
+            <button type="button" class="btn btn-info">Request Deposit Address</button>
+        </div>  
+    </body>
+</html>
+
