@@ -7,10 +7,12 @@ from utils import *
 from init import *
 
 def flaskThread():
+    logger.info('Flask thread spawned')
     app.run(host = cfg['host'], port = cfg['port'], threaded = True)
 
 def MixRequestThread(next_task):
-    handle_mix_request(cfg['baseurl'], int(cfg['maxfundwaittime']), next_task, distribute_fund, fail)
+    logger.info('New MixRequest thread spawned')
+    handle_mix_request(next_task, distribute_fund, fail)
 
 def calculate_fee(rawamount):
     '''
@@ -20,16 +22,19 @@ def calculate_fee(rawamount):
     '''
     return rawamount * float(cfg['feerate']) # 10 bps 
 
-def distribute_fund(distributer, base_url):
+def distribute_fund(distributer):
     '''
     logic for determing how to distribute the funds
     first transfer to house account
     '''
-    r = send_coins(base_url, distributer.deposit, distributer.fund, distributer.rawamount)
+    logger.info('Distributing fund from %s with amount %f' % (distributer.deposit, distributer.rawamount))
+    r = send_coins(distributer.deposit, distributer.fund, distributer.rawamount)
     # error checking
     if r.status_code != SUCCESS_CODE or "error" in r.json():
         # log error
-        return fail(distributer)# abort, no fund can be transferred from deposit
+        logger.error('HTTP POST ERROR: %d: when trying to send %f from %s to %s; Reason: %s'
+                % (r.status_code, distributer.rawamount, distributer.deposit, distributer.fund, r.reason))
+        return
     transfer_amount = distributer.rawamount - calculate_fee(distributer.rawamount)
     # randomly generate numbe of times to transfer the amount ~ 1 time per 1 jobcoin
     jobcoin_minunit = float(cfg['jobcoinminunit'])
@@ -47,41 +52,39 @@ def distribute_fund(distributer, base_url):
                 rand_amount = jobcoin_minunit * randrange(1, floor(transfer_amount / jobcoin_minunit), 1)
         else:
             rand_amount = transfer_amount
-        send_coins(base_url, distributer.fund, distributer.outaddrs[addr_idx], rand_amount)
+        send_coins(distributer.fund, distributer.outaddrs[addr_idx], rand_amount)
         transfer_amount -= rand_amount
         num_times -= 1
     # in case there are some leftovers, check again and 
     # transfer everything to fund before we release this deposit address
-    amount = check_balance(base_url, distributer.deposit)
+    amount = check_balance(distributer.deposit)
     if amount > ZERO_COIN:
-        send_coins(base_url, distributer.deposit, distributer.fund, amount)
+        send_coins(distributer.deposit, distributer.fund, amount)
     # log success
     return success(distributer)
 
-def handle_mix_request(base_url, max_wait_time, distributer, resolve, reject):
+def handle_mix_request(distributer, resolve, reject):
     '''
     this function will be called after deposit address
     has been sent to user already
     poll for funds on the deposit address with a expire time
     '''
-    end_time = Time() + max_wait_time # compute the maximal end time
-    print('in handle_mix_request', 'address:', distributer.deposit)
-    print('before check balance')
-    amount = check_balance(base_url, distributer.deposit)
+    logger.info('Handling mix request for deposit address %s' %  distributer.deposit)
+    end_time = Time() + int(cfg['maxfundwaittime']) # compute the maximal end time
+    amount = check_balance(distributer.deposit)
     hasmoney = amount > ZERO_COIN
     while not hasmoney and Time() < end_time:    # loop until the condition is false and timeout not exhausted
         sleep(float(cfg['pollinggranularity']) / MILLISECOND_FACTOR)        # release CPU cycles
-        amount = check_balance(base_url, distributer.deposit)
+        amount = check_balance(distributer.deposit)
         hasmoney = amount > ZERO_COIN
     # one last check
-    amount = check_balance(base_url, distributer.deposit)
+    amount = check_balance(distributer.deposit)
     hasmoney = amount > ZERO_COIN
     # condition check if money is not deposited, log error and
     # terminate the handler
-    print('after checking amount, amount is: ', amount, ', hasmoney is ', 'true' if hasmoney else 'false')
     if hasmoney and amount != 0:
         distributer.load_money(amount)
-        return resolve(distributer, base_url)
+        return resolve(distributer)
     else:
         return reject(distributer)
 

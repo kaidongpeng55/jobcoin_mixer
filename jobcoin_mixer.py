@@ -46,10 +46,7 @@ def main():
     # start polling for mix requests
     prev_deposit = '' # for de-dup
     while True:
-        next_task = poll_mix_request(
-                partial(check_queue, proc_queue),
-                timeout = int(cfg['maxtimeout']),
-                granularity = int(cfg['pollinggranularity']))
+        next_task = poll_mix_request(partial(check_queue, proc_queue))
         if next_task != None:
             if next_task.deposit == prev_deposit:
                 continue
