@@ -22,7 +22,7 @@
                         url = window.location.href.slice(0, )
                         if (url[url.length - 1] == '#') { url = url.slice(0,  -1) }
                         addrs = [...Array(len).keys()].map((idx) => $(`[name='address${idx}']`).val()).filter(e => e);                     
-                        alert(`[${addrs}]`)
+                        console.log(`addresses to be submitted: [${addrs}]`)
                         $.ajax({
                             type: 'POST',
                             url: `${url}sendmoney/`,
@@ -32,8 +32,8 @@
                                 $.find('[name=statusbar]')[0].innerHTML = ShowStatus(true, result )
                             },
                             error: (XMLHttpRequest, textStatus, errorThrown) => {
-                                alert(errorThrown);
-                                alert(textStatus)
+                                console.log(errorThrown);
+                                console.log(textStatus)
                                 $.find('[name=statusbar]')[0].innerHTML = ShowStatus(false, XMLHttpRequest )
                             },
                             contentType: "application/json",
