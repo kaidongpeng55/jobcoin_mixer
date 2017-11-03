@@ -41,7 +41,6 @@ def issue_deposit_addr():
     deposit_addr = next(unique_addr)
     distributer = Distributer(cfg['houseaccount'], cfg['maxfundwaittime'])
     distributer.prepare(deposit_addr, addresses)
-    proc_queue.put(distributer)
     response = {
         'addresses': addresses,
         'deposit_address': deposit_addr,
@@ -53,20 +52,7 @@ def issue_deposit_addr():
 
 @app.route('/testget/', methods=['GET'])
 def testget():
-    # global users
-    # values = request.get_json()
-    # addresses = values.get('addresses')
-    
     deposit_address = next(unique_addr)
-
-    # response = {
-    #     'deposit_address': deposit_address,
-    #     'expire_time': 10
-    # }
-
-    # d = Distributer(house_account, max_wait_time)
-    # d.prepare(deposit_address, addresses)
-    # users.append(d)
     deposit_addr = next(unique_addr)
     distributer = Distributer(cfg['houseaccount'], cfg['maxfundwaittime'])
     distributer.prepare(next(unique_addr), ['test1','test2'])
@@ -75,13 +61,15 @@ def testget():
         'deposit_address': deposit_addr,
         'expiry time': cfg['maxfundwaittime']
     }
-
     return jsonify(response), 200
+
 
 def flaskThread(host, port):
     print('in the flaskThread')
     app.run(host = host, port = port, threaded = True)
-    
+
+def MixRequestThread(url, max_wait_time, next_task):
+    handle_mix_request(url, max_wait_time, next_task, success, fail)
 
 if __name__ == "__main__":
     # load global configs
@@ -94,14 +82,23 @@ if __name__ == "__main__":
     flask_thread = threading.Thread(target = flaskThread, args = (cfg['host'], cfg['port']))
     flask_thread.start()
     
-    # test async promise
-    for i in range(10):
-        distributer = Distributer(cfg['houseaccount'], cfg['maxfundwaittime'])
-        distributer.prepare(next(unique_addr), ['test1','test2'])
-        handle_mix_request(distributer).then(success, fail)
-    
-    print(66666666)
+    # start polling for mix requests
+    prev_deposit = '' # for de-dup
+    while True:
+        print('new loop')
+        next_task = poll_mix_request(
+                partial(check_queue, proc_queue),
+                timeout = int(cfg['maxtimeout']),
+                granularity = int(cfg['pollinggranularity']))
+        if next_task != None:
+            if next_task.deposit == prev_deposit:
+                continue
+            prev_deposit = next_task.deposit
+            threading.Thread(
+                    target = MixRequestThread,
+                    args = (cfg['baseurl'], int(cfg['maxfundwaittime']), next_task)).start()
 
+    # wait until flaks thread finishes    
     flask_thread.join()
 
 

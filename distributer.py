@@ -13,7 +13,7 @@ class Distributer:
 
     def prepare(self, deposit_addr, addrs):
         self.deposit = deposit_addr
-        self.outaddr = addrs
+        self.outaddrs = addrs
 
     def load_money(self, amount):
         self.rawamount = amount
@@ -23,3 +23,6 @@ class Distributer:
 
     def get_info(self):
         return (self.fund, self.deposit, self.outaddrs, self.rawamount)
+
+    def print(self):
+        print("deposit address: ", self.deposit, ", outaddrs: ", self.outaddrs, ", amount:", self.rawamount)
