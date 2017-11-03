@@ -14,6 +14,7 @@ class Distributer:
     def prepare(self, deposit_addr, addrs):
         self.deposit = deposit_addr
         self.outaddrs = addrs
+        self.prepared = True
 
     def load_money(self, amount):
         self.rawamount = amount

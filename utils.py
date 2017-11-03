@@ -11,7 +11,7 @@ bad_data_response = {
         'message': "Error: parameter 'addresses' should be a non-empty list of addresses"
 }
 
-def send_coin(url, fromaddr, toaddr, amount):
+def send_coins(base_url, fromaddr, toaddr, amount):
     '''
     send jobcoins from one address to another
     url: api url
@@ -19,15 +19,15 @@ def send_coin(url, fromaddr, toaddr, amount):
     toaddr: address to send fund into
     amount: amount of jobcoin in string format
     '''
-    return requests.post(url, {
+    return requests.post(base_url + '/api/transactions', {
             'fromAddress': fromaddr,
             'toAddress': toaddr,
             'amount': amount
         }
     )
 
-def check_balance(url, addr):
-    return float((requests.get(url + '/api/addresses/' + addr).json())['balance'])
+def check_balance(base_url, addr):
+    return float((requests.get(base_url + '/api/addresses/' + addr).json())['balance'])
 
 
 

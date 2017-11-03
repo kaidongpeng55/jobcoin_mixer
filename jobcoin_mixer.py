@@ -69,7 +69,7 @@ def flaskThread(host, port):
     app.run(host = host, port = port, threaded = True)
 
 def MixRequestThread(url, max_wait_time, next_task):
-    handle_mix_request(url, max_wait_time, next_task, success, fail)
+    handle_mix_request(url, max_wait_time, next_task, distribute_fund, fail)
 
 if __name__ == "__main__":
     # load global configs
