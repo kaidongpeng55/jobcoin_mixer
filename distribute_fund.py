@@ -4,6 +4,7 @@ from math import floor, ceil
 from functools import partial
 from distributer import Distributer
 from utils import *
+from init import *
 
 def flaskThread(app, host, port):
     app.run(host = host, port = port, threaded = True)

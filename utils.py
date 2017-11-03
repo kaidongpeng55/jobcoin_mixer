@@ -1,5 +1,6 @@
 import requests
 import time
+from init import *
 
 # useful definitions
 MILLISECOND_FACTOR = 1000.0

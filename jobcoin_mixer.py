@@ -2,24 +2,11 @@ import json
 import requests
 import threading
 import os
-
-import parser
-from flask import Flask, jsonify, request, render_template
+from init import *
 from urllib.parse import urlparse
-from log import get_logger
-from random_address import get_unique_addr
 from distribute_fund import *
 from queue import Queue
 from utils import *
-
-# Global Definitions
-app = Flask(__name__, template_folder = os.path.abspath('./'))
-proc_queue = Queue()
-unique_addr = get_unique_addr()
-# load global configs
-cfg = parser.load_config()
-print('cfg:', cfg)
-logger = get_logger(cfg['appname'], verbose = cfg['verbose'])
 
 
 @app.route('/', methods=['GET'])
