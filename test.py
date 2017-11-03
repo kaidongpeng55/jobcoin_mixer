@@ -2,8 +2,6 @@ import time
 import random
 from math import ceil, floor
 
-
-
 def main(transfer_amount):
     jobcoin_minunit = 0.001
     random.seed(time.time())
@@ -31,8 +29,6 @@ def main(transfer_amount):
         print('amount left to be transferred: ', transfer_amount)
         num_times -= 1
 
-
-
-
 if __name__ == "__main__":
     main(float(input()))
+
