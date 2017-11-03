@@ -1,7 +1,7 @@
-import logging
-import os
-import errno
 from datetime import datetime
+import logging
+import errno
+import os
 
 def mkdir_p(path):
     '''

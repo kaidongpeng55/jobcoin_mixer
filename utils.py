@@ -1,11 +1,16 @@
 import requests
-import time
+from time import sleep, time as Time
 from init import *
 
 # useful definitions
 MILLISECOND_FACTOR = 1000.0
+ZERO_COIN = 0.0
 no_data_response = { 'message': "Error: parameter 'addresses' not found or data not in json type" }
 bad_data_response = { 'message': "Error: parameter 'addresses' should be a non-empty list of addresses" }
+SUCCESS_CODE = 200
+BAD_REQUEST = 400
+NOTFOUND = 404
+INTERNALERR = 500
 
 def send_coins(base_url, fromaddr, toaddr, amount):
     '''
@@ -36,10 +41,10 @@ def fail(distributer):
 
 def poll_mix_request(condition, timeout, granularity= 300):
     '''poll for any pending requests with a timeout and granularity'''
-    end_time = time.time() + timeout / MILLISECOND_FACTOR   # compute the maximal end time
+    end_time = Time() + timeout / MILLISECOND_FACTOR   # compute the maximal end time
     (status, retval) = condition()               # first condition check, no need to wait if condition already True
-    while not status and time.time() < end_time:    # loop until the condition is false and timeout not exhausted
-        time.sleep(granularity / MILLISECOND_FACTOR)        # release CPU cycles
+    while not status and Time() < end_time:    # loop until the condition is false and timeout not exhausted
+        sleep(granularity / MILLISECOND_FACTOR)        # release CPU cycles
         (status, retval) = condition()               # first condition check, no need to wait if condition already True
     return retval if status else None 
 

@@ -1,7 +1,7 @@
-import uuid
+from uuid import uuid4
 
 def get_unique_addr():
     ''' utility to generate an un used uuid address '''
     while True:
-        yield uuid.uuid4().hex
+        yield uuid4().hex
 

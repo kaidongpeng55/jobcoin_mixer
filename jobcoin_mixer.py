@@ -1,11 +1,8 @@
-import json
-import requests
-import threading
-import os
-from init import *
-from urllib.parse import urlparse
-from distribute_fund import *
+from threading import Thread
+from flask import Flask, jsonify, request, render_template
 from queue import Queue
+from init import *
+from distribute_fund import *
 from utils import *
 
 
@@ -43,7 +40,7 @@ def issue_deposit_addr():
 
 def main():
     # run flask thread on the background
-    flask_thread = threading.Thread(target = flaskThread, args = (app, cfg['host'], cfg['port']))
+    flask_thread = Thread(target = flaskThread, args = ())
     flask_thread.start()
     
     # start polling for mix requests
@@ -57,9 +54,7 @@ def main():
             if next_task.deposit == prev_deposit:
                 continue
             prev_deposit = next_task.deposit
-            threading.Thread(
-                    target = MixRequestThread,
-                    args = (cfg['baseurl'], int(cfg['maxfundwaittime']), next_task)).start()
+            Thread( target = MixRequestThread, args = (next_task,)).start()
 
     # wait until flaks thread finishes    
     flask_thread.join()
